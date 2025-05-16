@@ -26,8 +26,6 @@ def test_valid_login(driver):
 # # TC01b: Invalid Login - Empty Credentials (Functional, Invalid)
 # def test_login_empty_credentials(driver):
 #             driver.find_element(By.LINK_TEXT, "Log in").click()
-#             driver.find_element(By.NAME, "Email").clear()
-
 # TC02: Invalid Login (Functional, Invalid)
 def test_invalid_login(driver):
     driver.find_element(By.LINK_TEXT, "Log in").click()
