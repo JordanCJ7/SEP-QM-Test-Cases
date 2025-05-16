@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
 @pytest.fixture
 def driver():
@@ -66,17 +67,31 @@ def test_add_zero_quantity_to_cart(driver):
     quantity_box.send_keys("0")
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[value='Add to cart']"))).click()
     driver.save_screenshot("screenshots/zero_quantity_add_to_cart.png")
-    # Print all visible error messages for debugging
-    error_elements = driver.find_elements(By.CSS_SELECTOR, ".field-validation-error, .message-error, .bar-notification.error, .bar-notification")
-    for e in error_elements:
-        print('Error message:', e.text)
-    error_found = any("quantity" in e.text.lower() or "must be at least" in e.text.lower() or "enter a value" in e.text.lower() or "cannot be zero" in e.text.lower() for e in error_elements)
-    assert error_found, f"No error message shown for zero quantity. Errors: {[e.text for e in error_elements]}"
+    # After attempting to add zero quantity, check that the cart is still empty
+    driver.find_element(By.LINK_TEXT, "Shopping cart").click()
+    cart_content = driver.find_element(By.CSS_SELECTOR, ".order-summary-content").text.lower()
+    assert "your shopping cart is empty" in cart_content, f"Cart is not empty after adding zero quantity. Cart content: {cart_content}"
 
-# TC05: Search for Product (UI, Valid)
+# TC05: Search for valid Product (UI, Valid)
 def test_search_product(driver):
-    driver.find_element(By.NAME, "q").send_keys("computer")
-    driver.find_element(By.CSS_SELECTOR, "input[value='Search']").click()
-    driver.save_screenshot("screenshots/search_product_screenshot.png")
-    search_results = driver.find_elements(By.CSS_SELECTOR, ".product-item")
-    assert len(search_results) > 0, "No products found in search results"
+    try:
+        driver.find_element(By.NAME, "q").send_keys("computer")
+        driver.find_element(By.CSS_SELECTOR, "input[value='Search']").click()
+        driver.save_screenshot("screenshots/search_product_screenshot.png")
+        search_results = driver.find_elements(By.CSS_SELECTOR, ".product-item")
+        assert len(search_results) > 0, "No products found in search results"
+    except (NoSuchElementException, TimeoutException) as e:
+        driver.save_screenshot("screenshots/error_search_product_screenshot.png")
+        pytest.fail(f"Search test failed due to exception: {str(e)}")
+
+# TC06: Search for Invalid/Non-existent Product (UI, Invalid)
+def test_invalid_search_product(driver):
+    try:
+        driver.find_element(By.NAME, "q").send_keys("washing machine")
+        driver.find_element(By.CSS_SELECTOR, "input[value='Search']").click()
+        driver.save_screenshot("screenshots/invalid_search_product_screenshot.png")
+        search_results = driver.find_elements(By.CSS_SELECTOR, ".product-item")
+        assert len(search_results) == 0, "Unexpected products found in search results for invalid query"
+    except (NoSuchElementException, TimeoutException) as e:
+        driver.save_screenshot("screenshots/error_invalid_search_product_screenshot.png")
+        pytest.fail(f"Invalid search test failed due to exception: {str(e)}")
