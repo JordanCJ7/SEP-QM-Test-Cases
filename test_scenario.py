@@ -24,7 +24,6 @@ def test_valid_login(driver):
     assert driver.find_element(By.LINK_TEXT, "Log out").is_displayed(), "Valid login failed"
 
 # # TC01b: Invalid Login - Empty Credentials (Functional, Invalid)
-# def test_login_empty_credentials(driver):
 # TC02: Invalid Login (Functional, Invalid)
 def test_invalid_login(driver):
     driver.find_element(By.LINK_TEXT, "Log in").click()
