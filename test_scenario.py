@@ -85,3 +85,33 @@ def test_invalid_search_product(driver):
     except (NoSuchElementException, TimeoutException) as e:
         driver.save_screenshot("screenshots/error_invalid_search_product_screenshot.png")
         pytest.fail(f"Invalid search test failed due to exception: {str(e)}")
+
+# TC07: Valid Register (Functional, Valid)
+def test_valid_register(driver):
+    driver.find_element(By.LINK_TEXT, "Register").click()
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "register-button")))
+    driver.find_element(By.ID, "gender-male").click()
+    driver.find_element(By.ID, "FirstName").send_keys("Test")
+    driver.find_element(By.ID, "LastName").send_keys("User")
+    import time
+    unique_email = f"testuser_{int(time.time())}@example.com"
+    driver.find_element(By.ID, "Email").send_keys(unique_email)
+    driver.find_element(By.ID, "Password").send_keys("Test@1234")
+    driver.find_element(By.ID, "ConfirmPassword").send_keys("Test@1234")
+    driver.find_element(By.ID, "register-button").click()
+    driver.save_screenshot("screenshots/valid_register_screenshot.png")
+    # Assert registration success message
+    success_message = driver.find_element(By.CLASS_NAME, "result").text.lower()
+    assert "your registration completed" in success_message, f"Registration failed. Message: {success_message}"
+
+# TC08: Invalid Register (Functional, Invalid)
+def test_invalid_register(driver):
+    driver.find_element(By.LINK_TEXT, "Register").click()
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "register-button")))
+    # Leave all fields empty and try to register
+    driver.find_element(By.ID, "register-button").click()
+    driver.save_screenshot("screenshots/invalid_register_screenshot.png")
+    # Check for validation errors
+    error_elements = driver.find_elements(By.CSS_SELECTOR, ".field-validation-error, .validation-summary-errors")
+    error_texts = [e.text.lower() for e in error_elements if e.text.strip()]
+    assert any("is required" in t or "must be" in t for t in error_texts), f"No validation error shown for empty registration. Errors: {error_texts}"
