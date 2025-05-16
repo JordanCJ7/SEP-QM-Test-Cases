@@ -48,19 +48,30 @@ def test_add_to_cart(driver):
     driver.find_element(By.LINK_TEXT, "Cell phones").click()
     driver.find_element(By.LINK_TEXT, "Smartphone").click()
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[value='Add to cart']"))).click()
+    # Wait for the notification that the product was added
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CSS_SELECTOR, ".bar-notification.success, .bar-notification")))
     driver.find_element(By.LINK_TEXT, "Shopping cart").click()
     driver.save_screenshot("screenshots/add_to_cart_screenshot.png")
     # Check for product name in cart by text, not link
-    product_in_cart = driver.find_element(By.XPATH, "//td[@class='product']/a[contains(text(), 'Smartphone')]").is_displayed()
-    assert product_in_cart, "Product was not added to cart"
+    cart_content = driver.find_element(By.CSS_SELECTOR, ".order-summary-content").text.lower()
+    assert "smartphone" in cart_content, f"Product was not added to cart. Cart content: {cart_content}"
 
-# TC04: Add Product to Cart - Invalid Product (Functional, Invalid)
-def test_add_invalid_product_to_cart(driver):
-        driver.find_element(By.LINK_TEXT, "Electronics").click()
-        driver.find_element(By.LINK_TEXT, "Cell phones").click()
-        # Try to add a product that does not exist
-        product_links = driver.find_elements(By.LINK_TEXT, "NonExistentProduct")
-        assert len(product_links) == 0, "Non-existent product should not be found"    
+# TC04: Add Product to Cart - Zero Quantity (Functional, Invalid)
+def test_add_zero_quantity_to_cart(driver):
+    driver.find_element(By.LINK_TEXT, "Electronics").click()
+    driver.find_element(By.LINK_TEXT, "Cell phones").click()
+    driver.find_element(By.LINK_TEXT, "Smartphone").click()
+    quantity_box = driver.find_element(By.ID, "addtocart_43_EnteredQuantity")
+    quantity_box.clear()
+    quantity_box.send_keys("0")
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[value='Add to cart']"))).click()
+    driver.save_screenshot("screenshots/zero_quantity_add_to_cart.png")
+    # Print all visible error messages for debugging
+    error_elements = driver.find_elements(By.CSS_SELECTOR, ".field-validation-error, .message-error, .bar-notification.error, .bar-notification")
+    for e in error_elements:
+        print('Error message:', e.text)
+    error_found = any("quantity" in e.text.lower() or "must be at least" in e.text.lower() or "enter a value" in e.text.lower() or "cannot be zero" in e.text.lower() for e in error_elements)
+    assert error_found, f"No error message shown for zero quantity. Errors: {[e.text for e in error_elements]}"
 
 # TC05: Search for Product (UI, Valid)
 def test_search_product(driver):
