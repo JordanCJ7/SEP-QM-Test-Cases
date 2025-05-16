@@ -30,7 +30,6 @@ def test_valid_login(driver):
 #             driver.find_element(By.NAME, "Password").clear()
 #             WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[value='Log in']"))).click()
 #             driver.save_screenshot("screenshots/empty_credentials_login_screenshot.png")
-#             error_message = driver.find_element(By.CSS_SELECTOR, ".validation-summary-errors").tex    
 
 # TC02: Invalid Login (Functional, Invalid)
 def test_invalid_login(driver):
